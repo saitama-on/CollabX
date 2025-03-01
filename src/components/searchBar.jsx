@@ -2,12 +2,14 @@ import React from 'react'
 import '../styles/searchBar.css'
 import {useState , useEffect} from 'react'
 import InfoModal from "./modal.jsx"
+import InputModal from "./inputmodal.jsx"
 
 export default function SearchBar({jsonData}){
     const [show , setShow] = useState(false)
     const [data , setData] = useState({})
     const [searchQuery , setSearchQuery] = useState('')
     const [category , setCategory] = useState('ALL')
+    const [inputshow , setInputShow] = useState(false)
 
     const [filteredData , setFilteredData] = useState([])
 
@@ -25,7 +27,7 @@ export default function SearchBar({jsonData}){
             }
         )
 
-        if (category != 'ALL'){
+        if (category !== 'ALL'){
             setFilteredData(filteredData2)
         }
 
@@ -50,13 +52,15 @@ export default function SearchBar({jsonData}){
     }
 
     
-
-
-
     const handleCategory = (e) =>{
             setCategory(e.target.value)
             console.log(filteredData)
 }
+
+
+    const handleAdd = ()=>{
+        setInputShow(true)
+    }
 
 
     return(
@@ -69,7 +73,8 @@ export default function SearchBar({jsonData}){
                 onChange={handleSearch}>
 
                 </input>
-                <div>
+                <div className="multi-div">
+                    <div>
                     <span>Choose by Category : </span>
                     <select onChange={handleCategory} value={category}>
                         <option>ALL</option>
@@ -79,6 +84,12 @@ export default function SearchBar({jsonData}){
                         <option>Hardware/Electronics</option>
                         <option>other</option>
                     </select>
+                    </div>
+                    <div className="add-proj">
+                    
+                <button onClick={handleAdd}>Add project</button>
+                
+                    </div>
                 </div>
                 
                 <div className="title-data-div">
@@ -88,7 +99,9 @@ export default function SearchBar({jsonData}){
                 </div> 
             
             </div>
-            {show && <InfoModal show={show} setShow={setShow} info={data}/> }
+            
+            {show && <InfoModal setShow={setShow} info={data}/> }
+            {inputshow && <InputModal setInputShow={setInputShow} />}
         </div>
         </>
     );

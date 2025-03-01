@@ -1,54 +1,86 @@
-
 .custom-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Darker overlay for better focus */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Modal Box */
+.custom-modal {
+  background-color: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 60%;
+  max-width: 800px;
+  height: 75%;
+  max-height: 90%;
+  overflow-y: auto;
+  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-20px);
+  opacity: 0;
+  animation: fadeInModal 0.3s ease-out forwards;
+}
+
+/* Animation */
+@keyframes fadeInModal {
+  to {
+      transform: translateY(0);
+      opacity: 1;
   }
-  
-  
+}
+
+/* Close Button */
+.custom-modal-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.close-button:hover {
+  color: red;
+}
+
+/* Modal Content */
+.custom-modal-body {
+  margin-top: 15px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Inside Modal */
+.inside-modal-div {
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.inside-modal-div:last-child {
+  border-bottom: none;
+}
+
+/* Styled Labels */
+.span-text {
+  font-weight: bold;
+  color: #444;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .custom-modal {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 70%;
-    height: 70%;
-    overflow-y: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      height: auto;
   }
-  
-  
-  .custom-modal-header {
-    display: flex;
-    justify-content: flex-end;
-  }
-  
-
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 30px;
-    color: #333;
-    cursor: pointer;
-  }
-  
-  .custom-modal-body {
-    margin-top: 10px;
-    font-size: larger;
-  }
-
-  .custom-modal-body > .inside-modal-div {
-    height:5vh;
-    margin:20px;
-  }
-  
-
-  .span-text{
-    font-style:oblique;
-  }
+}
