@@ -43,7 +43,7 @@ export default function SearchBar(){
             );
             const data= await response.json();
             setJsonData(data);
-            console.log(data)
+            console.log(Object.keys(data))
       
             // setJsonData(data);
           } catch (error) {

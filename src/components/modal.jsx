@@ -4,7 +4,7 @@ import { initializeApp } from "firebase/app";
 import {ref , getStorage , uploadBytes , getDownloadURL , list} from  'firebase/storage';
 import {getAuth, signInWithPopup, GoogleAuthProvider , signOut} from "firebase/auth";
 import {getdatabase } from "firebase/database"
-import cors from 'cors'
+
 import {ThreeDot} from 'react-loading-indicators'
 
 
