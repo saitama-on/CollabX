@@ -23,9 +23,11 @@
 }
 
 .custom-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+   display: flex;
+   flex-direction: row;
+   justify-content: space-between;
+ 
+   
     
 }
 .custom-modal > .custom-modal-body{

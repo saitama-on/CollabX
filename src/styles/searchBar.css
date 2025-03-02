@@ -91,7 +91,27 @@
 }
 
 .add-proj{
-    margin-left:20px;
+    margin-left:auto;
+    margin-top:25px;
+    
+}
+
+.add-proj > button{
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 8px;
+    border-width: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.add-proj > button:hover{
+    background: #007bff;
+    color: white;
+    transform: scale(1.05);
 }
 /* Responsive Design */
 @media (max-width: 768px) {

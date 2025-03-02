@@ -8,7 +8,7 @@ import SearchBar from './components/searchBar'
 function App() {
   return (
     <div>
-      <SearchBar jsonData={info}/>
+      <SearchBar />
       
     </div>
     

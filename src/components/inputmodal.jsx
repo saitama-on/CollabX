@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import '../styles/inputmodal.css'
 import { initializeApp } from "firebase/app";
 import {ref , getStorage , uploadBytes , getDownloadURL , list} from  'firebase/storage';
-import {getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import {getAuth, signInWithPopup, GoogleAuthProvider , signOut} from "firebase/auth";
+import { useFormState } from "react-dom";
+import {ThreeDot} from 'react-loading-indicators'
 
 
 const firebaseConfig = {
@@ -17,17 +19,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
-const auth = getAuth();
+const auth = getAuth(app);
 
-export default function InputModal({ setInputShow }) {
+// console.log(json_data)
+
+export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
   const [groupMembers, setGroupMembers] = useState([""]);
   const [title, setTitle] = useState("");
   const [researchArea, setResearchArea] = useState("");
   const [faculty, setFaculty] = useState("");
   const [file, setFile] = useState(null);
+  const [category, setCategory] = useState("Other");
+  const [uploadingLoad , setUploadingLoad] = useState(false);
+  
+  let index=1;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const infoUrl = await getDownloadURL(ref(storage, 'student/info1.json'));
+        const response = await fetch(`https://cors-anywhere-wbl8.onrender.com/${infoUrl}`,
+          {headers: {
+            'Origin': 'http://localhost:3000',
+            'X-Requested-With': 'XMLHttpRequest'
+          }}
+        );
+        const data= await response.json();
+        setJsonData(data);
+        console.log(Object.keys(data))
+  
+        // setJsonData(data);
+      } catch (error) {
+        console.error("Error fetching JSON data:", error);
+      }
+    };
+  
+    fetchData();
+  }, []);
  
 
-  const handleClose = () => setInputShow(false);
+  const handleClose = () => {
+    setInputShow(false);
+  
+    // auth.signOut();
+  }
 
   // Add New Group Member
   const addGroupMember = () => {
@@ -64,9 +99,8 @@ export default function InputModal({ setInputShow }) {
   };
 
   // Validate Inputs
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     let hasError = false;
-
     if (!title.trim()) {
       highlightError("title");
       hasError = true;
@@ -89,22 +123,107 @@ export default function InputModal({ setInputShow }) {
     }
 
     if (!hasError) {
-      alert("Project Submitted Successfully!");
+      
       console.log({ title, researchArea, faculty, groupMembers, file });
-      handleUploadData(title , researchArea , faculty , groupMembers , file);
+      setUploadingLoad(true);
+
+      try{
+      const result = await handleUploadData(title , researchArea , faculty , groupMembers ,category,  file);
+      // console.log(result)
+      }
+
+      catch(err){
+        console.log(err)
+      }
+    
     }
   };
 
 
-  const handleUploadData = async(title , researchArea , faculty , groupMembers , file) =>{
+  const handleUploadData = async(title , researchArea , faculty , groupMembers ,category,  file) =>{
+
 
     try {
-        if(!auth){
-            return signInWithPopup(auth,provider);
+   
+        if(!auth.currentUser){
+            const user =  await signInWithPopup(auth,provider);
+            const uploadingName = auth.currentUser.displayName.toLowerCase().trim();
+            const isPresent = groupMembers.some((member) => {
+              const normalizedMember = member.toLowerCase().trim();
+              return (
+                normalizedMember === uploadingName ||
+                uploadingName.split(" ").some((word) => normalizedMember.includes(word))
+              );
+            });
+
+            
+  
+            if(isPresent){
+              const storageRef = ref(storage , `minor_data/${title}`);
+              
+              await uploadBytes(storageRef , file).then(async(snap)=>{
+                alert("Uploaded Successfully");
+                const url = await getDownloadURL(ref(storage , `minor_data/${title}`));
+                setJsonData((prev) => {
+                  const newData = { ...prev }; // Create a fresh object
+                  const newIndex = Object.keys(prev).length + 1;
+                  newData[newIndex] = {
+                    "title of project": title,
+                    "Area of Research": researchArea,
+                    "Faculty": faculty,
+                    "Group Members": groupMembers,
+                    "Category" : category,
+                    "Research Paper": url
+                  };
+                  return newData;
+                });
+                
+         
+              }).catch((err)=>{
+                console.log(err)
+              })
+            }
+            
             
         }
         else{
-          console.log("hai rre baba!!",auth)
+          const uploading_name = auth.currentUser.displayName.toLowerCase().trim();;
+          const isPresent = groupMembers.some((member) => {
+            const normalizedMember = member.toLowerCase().trim();
+            return (
+              normalizedMember === uploading_name ||
+              uploading_name.split(" ").some((word) => normalizedMember.includes(word))
+            );
+          });
+
+        
+        // console.log(auth.currentUser)
+
+          if(isPresent){
+            const storageRef = ref(storage , `minor_data/${title}`);
+            await uploadBytes(storageRef , file).then(async(snap)=>{
+              alert("Uploaded Successfully");
+              let url = await getDownloadURL(ref(storage , `minor_data/${title}`));
+              
+              setJsonData((prev) => {
+                const newData = { ...prev }; // Create a fresh object
+                const newIndex = Object.keys(prev).length + 1;
+                newData[newIndex] = {
+                  "title of project": title,
+                  "Area of Research": researchArea,
+                  "Faculty": faculty,
+                  "Group Members": groupMembers,
+                  "Category": category,
+                  "Research Paper": url
+                };
+                return newData;
+              });
+              
+       
+            }).catch((err)=>{
+              console.log(err)
+            })
+          }
         }
 
         
@@ -117,6 +236,25 @@ export default function InputModal({ setInputShow }) {
 
   }
 
+
+
+  useEffect(() => {
+    if (Object.keys(jsonData).length === 0) return; // Prevent unnecessary uploads
+  
+    const uploadJsonData = async () => {
+      try {
+        const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: "application/json" });
+  
+        await uploadBytes(ref(storage, 'student/info1.json'), jsonBlob);
+        console.log('Data updated successfully:', jsonData);
+      } catch (err) {
+        console.error('Error uploading JSON:', err);
+      }
+    };
+  
+    uploadJsonData();
+  }, [jsonData]);
+  
   // Highlight Error Input
   const highlightError = (id) => {
     document.getElementById(id)?.classList.add("error");
@@ -144,6 +282,16 @@ export default function InputModal({ setInputShow }) {
           <div className="inside-modal-div">
             <label><strong>Faculty:</strong></label>
             <input id="faculty" type="text" placeholder="Enter faculty name" value={faculty} onChange={(e) => setFaculty(e.target.value)} />
+          </div>
+          <div className="inside-modal-div">
+            <label><strong>Project Category:</strong></label>
+            <select id="category" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="AI/ML">AI/ML</option>
+              <option value="Web/App Dev">Web/App Dev</option>
+              <option value="Blockchain">Blockchain</option>
+              <option value="Hardware/Electronics">Hardware/Electronics</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
           <div className="inside-modal-div">
             <label><strong>Group Members:</strong></label>
@@ -179,4 +327,5 @@ export default function InputModal({ setInputShow }) {
       </div>
     </div>
   );
+  
 }

@@ -2,9 +2,10 @@ import { useState , useEffect} from 'react';
 import '../styles/modal.css';  
 import { initializeApp } from "firebase/app";
 import {ref , getStorage , uploadBytes , getDownloadURL , list} from  'firebase/storage';
-import {getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import {getAuth, signInWithPopup, GoogleAuthProvider , signOut} from "firebase/auth";
 import {getdatabase } from "firebase/database"
 import cors from 'cors'
+import {ThreeDot} from 'react-loading-indicators'
 
 
 const firebaseConfig = {
@@ -34,8 +35,14 @@ function InfoModal({ show, setShow, info }) {
   const [file , setFile] = useState(null);
   const [paper , setPaper] = useState(info['paper']);
   const [uploadsuccess , setUploadSuccess] = useState(false);
+  const [loader , setLoader] = useState(false);
 
   useEffect(()=>{
+    setLoader(true);
+    setTimeout(()=>{
+      setLoader(false);
+      return;
+    } , 3000)
     const storage_ref = ref(storage , 'minor_data');
 
     const list_files = async()=>{
@@ -49,6 +56,7 @@ function InfoModal({ show, setShow, info }) {
           setPaper(url)
           info['paper'] = url;
           console.log(url)
+          setLoader(false);
         }
 
       }
@@ -61,39 +69,53 @@ function InfoModal({ show, setShow, info }) {
     list_files();
 
   },[uploadsuccess])
-  const handleClose = () => setShow(false);
 
-  const handleAuth =()=>{
-    return signInWithPopup(auth,provider).then((info)=>{
-      setYesAuth(true)
-      return info
-    })
-  }
+
+  const handleClose = () => {
+    console.log(auth.currentUser);
+    auth.signOut();
+    setShow(false)
+  };
+
+
 
   const handleFileChange = (e) =>{
       setFile(e.target.files[0]);
   }
-  const handleUpload = async() =>{
-    if(yesauth){ console.log("fuck yeah", auth)
+  const handleAuth = async() =>{
+    if(!file){
+      alert('please select a file!!')
+      return;
+    }
 
-        if(!file){
-          alert('please select a file!!')
-          return;
-        }
+    if(yesauth){ 
+      console.log("fuck yeah", auth);
+      setLoader(true);
 
         const storageRef = ref(storage , `minor_data/${info['title of project']}`)
 
         uploadBytes(storageRef , file).then((snap)=>{
-          console.log(snap)
-          setUploadSuccess((prev)=>!prev)
+          alert("Uploaded Successfully");
+          
+          setUploadSuccess(true)
         })
-
-
      }
     
     else{
-      info = await handleAuth();
-      console.log(info)
+
+      return signInWithPopup(auth,provider).then(()=>{
+        setYesAuth(true)
+        setLoader(true);
+        const storageRef = ref(storage , `minor_data/${info['title of project']}`)
+       
+
+        uploadBytes(storageRef , file).then((snap)=>{
+          alert("Uploaded Successfully")
+          setUploadSuccess(true)
+        })
+    
+      })
+      
     }
   }
 
@@ -125,14 +147,12 @@ function InfoModal({ show, setShow, info }) {
                   
                   {paper ? 
                   <div className="inside-modal-div">
-                <span className="span-text">Paper -- </span><a href={paper} target="_blank">Link to paper</a>
-              </div>: <div>
+                <span className="span-text">Paper : </span><a href={paper} target="_blank">Link to paper</a>
+              </div>: loader ? <ThreeDot color="#316dcc" size="medium" text="" textColor="" /> : <div>
                   <p>Is this your project ? </p>
                   <input type="file" onChange={handleFileChange}></input>
-                  <button onClick={handleUpload}> Upload</button></div>}
-                  {/* <input type="file" onChange={handleFileChange}></input>
-                  <button onClick={handleUpload}> Upload</button> */}
-                  {/* <button>Add link</button> */}
+                  <button onClick={handleAuth}> Upload</button></div>}
+                 
               </div>
             </div>
           </div>
