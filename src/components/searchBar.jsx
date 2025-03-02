@@ -41,6 +41,7 @@ export default function SearchBar(){
             console.log(infoUrl)
             const response = await fetch(`https://cors-anywhere-wbl8.onrender.com/${infoUrl}`
             );
+
             const data= await response.json();
             setJsonData(data);
             console.log(Object.keys(data))
