@@ -30,7 +30,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
   const [faculty, setFaculty] = useState("");
   const [file, setFile] = useState(null);
   const [category, setCategory] = useState("Other");
-  const [uploadingLoad , setUploadingLoad] = useState(false);
+  const [uploadingLoad , setUploadingLoad] = useState(true);
   
   let index=1;
 
@@ -142,6 +142,8 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
 
   const handleUploadData = async(title , researchArea , faculty , groupMembers ,category,  file) =>{
 
+    setUploadingLoad(false);
+
 
     try {
    
@@ -163,6 +165,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
               
               await uploadBytes(storageRef , file).then(async(snap)=>{
                 alert("Uploaded Successfully");
+                setUploadingLoad(true);
                 const url = await getDownloadURL(ref(storage , `minor_data/${title}`));
                 setJsonData((prev) => {
                   const newData = { ...prev }; // Create a fresh object
@@ -175,6 +178,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
                     "Category" : category,
                     "Research Paper": url
                   };
+                  
                   return newData;
                 });
                 
@@ -203,6 +207,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
             const storageRef = ref(storage , `minor_data/${title}`);
             await uploadBytes(storageRef , file).then(async(snap)=>{
               alert("Uploaded Successfully");
+              setUploadingLoad(true)
               let url = await getDownloadURL(ref(storage , `minor_data/${title}`));
               
               setJsonData((prev) => {
@@ -216,6 +221,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
                   "Category": category,
                   "Research Paper": url
                 };
+                
                 return newData;
               });
               
@@ -322,7 +328,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
               </div>
             )}
           </div>
-          <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+          {uploadingLoad ? <button className="submit-btn" onClick={handleSubmit}>Submit</button> : <ThreeDot color="#316dcc" size="medium" text="" textColor="" />}
         </div>
       </div>
     </div>
