@@ -23,7 +23,7 @@ const auth = getAuth(app);
 
 // console.log(json_data)
 
-export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
+export default function InputModal({ setInputShow , jsonData  ,setJsonData , facultyArray}) {
   const [groupMembers, setGroupMembers] = useState([""]);
   const [title, setTitle] = useState("");
   const [researchArea, setResearchArea] = useState("");
@@ -35,6 +35,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
   let index=1;
 
   useEffect(() => {
+    facultyArray = facultyArray.filter((facultyName)=> facultyName != "ALL");
     const fetchData = async () => {
       try {
         const infoUrl = await getDownloadURL(ref(storage, 'student/info1.json'));
@@ -219,7 +220,7 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
                   "Faculty": faculty,
                   "Group Members": groupMembers,
                   "Category": category,
-                  "Research Paper": url
+                  "Report": url
                 };
                 
                 return newData;
@@ -267,6 +268,11 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
     
   };
 
+
+  const handleFacultySearch = (e) =>{
+
+  }
+
   return (
     <div className="custom-modal-overlay" onClick={handleClose}>
       <div className="custom-modal" onClick={(e) => e.stopPropagation()}>
@@ -287,7 +293,11 @@ export default function InputModal({ setInputShow , jsonData  ,setJsonData}) {
           </div>
           <div className="inside-modal-div">
             <label><strong>Faculty:</strong></label>
-            <input id="faculty" type="text" placeholder="Enter faculty name" value={faculty} onChange={(e) => setFaculty(e.target.value)} />
+            <select value={faculty} onChange={(e)=> setFaculty(e.target.value)} >
+              {facultyArray.map((facultyName)=>{
+                return <option value={facultyName}>{facultyName}</option>
+              })}
+            </select>
           </div>
           <div className="inside-modal-div">
             <label><strong>Project Category:</strong></label>

@@ -7,6 +7,7 @@ import { initializeApp } from "firebase/app";
 import { ref, getStorage, uploadBytes, getDownloadURL, list } from 'firebase/storage';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { useFormState } from "react-dom";
+import { ThreeDot } from 'react-loading-indicators';
 
 const firebaseConfig = {
   apiKey: "AIzaSyD2RpxeHhLOMaqzS8-Vo5WuUqLtUFYilUE",
@@ -30,45 +31,29 @@ export default function SearchBar() {
   const [faculty, setFaculty] = useState('ALL')  // Faculty state
   const [inputshow, setInputShow] = useState(false);
   const [jsonData, setJsonData] = useState({});
-  const [filteredData, setFilteredData] = useState([])
+  const[facultyJson , setFacultyJson] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+  const [facultyArray , setFacultyArray] = useState(["ALL"]);
+ 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const infoUrl = await getDownloadURL(ref(storage, 'student/info1.json'));
-        console.log(infoUrl)
+        const fac_url = await getDownloadURL(ref(storage , 'student/faculty.json'));
+        const fac_res = await fetch(`https://cors-anywhere-wbl8.onrender.com/${fac_url}`);
+        const fac_data = await fac_res.json();
+        setFacultyJson(fac_data);
         const response = await fetch(`https://cors-anywhere-wbl8.onrender.com/${infoUrl}`);
         const data = await response.json();
         setJsonData(data);
-        console.log(Object.keys(data))
       } catch (error) {
         console.error("Error fetching JSON data:", error);
       }
     };
-})
+    fetchData();
+},[])
 
-    
-      useEffect(() => {
-        const fetchData = async () => {
-           
-          try {
-            const infoUrl = await getDownloadURL(ref(storage, 'student/info1.json'));
-            console.log(infoUrl)
-            const response = await fetch(`https://cors-anywhere-wbl8.onrender.com/${infoUrl}`
-            );
-
-            const data= await response.json();
-            setJsonData(data);
-            console.log(Object.keys(data))
-      
-            // setJsonData(data);
-          } catch (error) {
-            console.error("Error fetching JSON data:", error);
-          }
-        };
-      
-        fetchData();
-      }, []);
      
 
   // Filter data by searchQuery, category, and faculty
@@ -79,19 +64,19 @@ export default function SearchBar() {
 
     // Filter by Category
     if (category !== 'ALL') {
-      filteredData = filteredData.filter((item) => item['Category'].toLowerCase().includes(category.toLowerCase()));
+      filteredData = Object.values(jsonData).filter((item) => item['Category'].toLowerCase().includes(category.toLowerCase()));
     }
 
     // Filter by Faculty
     if (faculty !== 'ALL') {
-      filteredData = filteredData.filter((item) => item['Faculty'].toLowerCase().includes(faculty.toLowerCase()));
+      filteredData = Object.values(jsonData).filter((item) => item['Faculty'].toLowerCase().includes(faculty.toLowerCase()));
     }
 
     setFilteredData(filteredData);
-  }, [searchQuery, category, faculty, jsonData]);
+  }, [searchQuery, category, faculty, jsonData , facultyJson]);
 
   const handleSearch = (e) => {
-    console.log(e.target.value)
+
     setSearchQuery(e.target.value);
     setCategory('ALL');
     setFaculty('ALL');
@@ -117,15 +102,15 @@ export default function SearchBar() {
   }
 
   // Get all unique faculty names
-  const getUniqueFaculties = () => {
-    const faculties = new Set();
-    Object.values(jsonData).forEach(item => {
-      if (item['Faculty']) {
-        faculties.add(item['Faculty']);
-      }
+ useEffect(()=>{
+    let arrfac=[];
+    Object.keys(facultyJson).forEach(item => {
+      arrfac.push(item);
     });
-    return ['ALL', ...Array.from(faculties)];
-  }
+    
+    setFacultyArray((prev)=>[...prev,...arrfac]);
+
+  },[facultyJson]);
 
   return (
     <>
@@ -152,7 +137,7 @@ export default function SearchBar() {
             <div>
               <span>Choose by Faculty : </span>
               <select onChange={handleFaculty} value={faculty}>
-                {getUniqueFaculties().map((facultyName) => (
+                {facultyArray.map((facultyName) => (
                   <option key={facultyName} value={facultyName}>
                     {facultyName}
                   </option>
@@ -173,8 +158,8 @@ export default function SearchBar() {
           </div>
         </div>
 
-        {show && <InfoModal setShow={setShow} info={data} />}
-        {inputshow && <InputModal setInputShow={setInputShow} jsonData={jsonData} setJsonData={setJsonData} />}
+        {show && <InfoModal setShow={setShow} info={data} jsonData={jsonData} setJsonData={setJsonData}/>}
+        {inputshow && <InputModal setInputShow={setInputShow} jsonData={jsonData} setJsonData={setJsonData} facultyArray={facultyArray}/>}
       </div>
     </>
   );
